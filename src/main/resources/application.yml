@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: homio
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 801267108346-ldof1r3l6667c5pu49of9alq62md7f5u.apps.googleusercontent.com
+            client-secret: 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
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope:
+              - openid
+              - profile
+              - email
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+
+  # database configuration
+  datasource:
+    url: jdbc:postgresql://localhost:5432/homio
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+  sql:
+    init:
+      mode: always
+
+  server:
+    port: 9090
+
