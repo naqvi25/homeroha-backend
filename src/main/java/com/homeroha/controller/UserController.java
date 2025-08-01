@@ -31,8 +31,6 @@ public class UserController {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-//        Home home = null;
-
 
         AuthResponse response = AuthResponse.builder()
                 .email(user.getEmail())
@@ -43,9 +41,4 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
-
-//    @GetMapping("/me")
-//    public ResponseEntity<UserDashboardDTO> getUserDashboard(Principal principal) {
-//        return ResponseEntity.ok(userService.getDashboardInfo(principal.getName()));
-//    }
 }
