@@ -20,11 +20,14 @@ public class HomeController {
     private final HomeService homeService;
 
     @PostMapping("/create")
-    public ResponseEntity<String> createHome(@RequestBody HomeRequestDTO request, Principal principal) {
+    public ResponseEntity<?> createHome(@RequestBody HomeRequestDTO request, Principal principal) {
         System.out.println("==== Home creation endpoint hit ====");
-        System.out.println("Principal: " + principal);
-        homeService.createHome(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body("Home created successfully");
+        try {
+            homeService.createHome(request);
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Home created successfully!"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
     }
 
     @PostMapping("/active/{homeId}")

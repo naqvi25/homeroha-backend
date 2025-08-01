@@ -3,14 +3,19 @@ package com.homeroha.service.impl;
 import com.homeroha.dto.ShoppingListItemRequestDTO;
 import com.homeroha.dto.ShoppingListItemResponseDTO;
 import com.homeroha.exception.HomerohaException;
-import com.homeroha.model.*;
-import com.homeroha.repository.*;
-import com.homeroha.service.InventoryService;
+import com.homeroha.model.Home;
+import com.homeroha.model.InventoryItem;
+import com.homeroha.model.ShoppingListItem;
+import com.homeroha.model.User;
+import com.homeroha.repository.InventoryItemRepository;
+import com.homeroha.repository.ShoppingListItemRepository;
+import com.homeroha.repository.UserHomeRepository;
+import com.homeroha.repository.UserRepository;
+import com.homeroha.repository.HomeRepository;
 import com.homeroha.service.ShoppingListService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,33 +32,17 @@ public class ShoppingListServiceImpl implements ShoppingListService {
 
     @Override
     public List<ShoppingListItemResponseDTO> getItems(String userEmail, Long homeId) {
-        System.out.println("getItems called with userEmail: " + userEmail + " and homeId: " + homeId);
-
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new HomerohaException("User not found"));
 
-        Home home;
-        if (homeId != null) {
-            home = homeRepository.findById(homeId)
-                    .orElseThrow(() -> new HomerohaException("Home not found"));
-        } else {
-            home = user.getActiveHome();
-            if (home == null) {
-                throw new HomerohaException("No active home selected");
-            }
-        }
+        Home home = (homeId != null)
+                ? homeRepository.findById(homeId).orElseThrow(() -> new HomerohaException("Home not found"))
+                : getActiveHomeOrThrow(user);
 
-        boolean isMember = userHomeRepository.existsByUserAndHome(user, home);
-        if (!isMember) {
-            throw new HomerohaException("You are not a member of this home");
-        }
+        checkMembership(user, home);
 
-        // ✅ Filter by home
-        List<ShoppingListItem> items = shoppingListItemRepository.findAllByHome(home);
-
-//                .findAllByHomeAndCreatedBy(home, user);
-
-        return items.stream()
+        return shoppingListItemRepository.findAllByHome(home)
+                .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -62,15 +51,9 @@ public class ShoppingListServiceImpl implements ShoppingListService {
     public List<ShoppingListItemResponseDTO> getItems(String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new HomerohaException("User not found"));
-
-        Home activeHome = user.getActiveHome();
-        if (activeHome == null) {
-            throw new HomerohaException("No active home selected");
-        }
-
-        List<ShoppingListItem> items = shoppingListItemRepository.findAllByHome(activeHome);
-
-        return items.stream()
+        Home home = getActiveHomeOrThrow(user);
+        return shoppingListItemRepository.findAllByHome(home)
+                .stream()
                 .map(this::mapToResponse)
                 .toList();
     }
@@ -79,22 +62,11 @@ public class ShoppingListServiceImpl implements ShoppingListService {
     public ShoppingListItemResponseDTO addItem(String userEmail, ShoppingListItemRequestDTO request) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new HomerohaException("User not found"));
+        Home home = (request.getHomeId() != null)
+                ? homeRepository.findById(request.getHomeId()).orElseThrow(() -> new HomerohaException("Home not found"))
+                : getActiveHomeOrThrow(user);
 
-        Home home;
-        if (request.getHomeId() != null) {
-            home = homeRepository.findById(request.getHomeId())
-                    .orElseThrow(() -> new HomerohaException("Home not found"));
-        } else {
-            home = user.getActiveHome();
-            if (home == null) {
-                throw new HomerohaException("No active home selected");
-            }
-        }
-
-        boolean isMember = userHomeRepository.existsByUserAndHome(user, home);
-        if (!isMember) {
-            throw new HomerohaException("You are not a member of this home");
-        }
+        checkMembership(user, home);
 
         ShoppingListItem item = ShoppingListItem.builder()
                 .name(request.getName())
@@ -108,24 +80,18 @@ public class ShoppingListServiceImpl implements ShoppingListService {
                 .build();
 
         shoppingListItemRepository.save(item);
-
         return mapToResponse(item);
     }
 
     @Override
+    @Transactional
     public ShoppingListItemResponseDTO markBought(Long id, String userEmail) {
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new HomerohaException("User not found"));
-
         ShoppingListItem item = shoppingListItemRepository.findById(id)
                 .orElseThrow(() -> new HomerohaException("Item not found"));
-
-        Home home = item.getHome(); // ✅ Direct from item
-
-        boolean isMember = userHomeRepository.existsByUserAndHome(user, home);
-        if (!isMember) {
-            throw new HomerohaException("You are not a member of this home");
-        }
+        Home home = item.getHome();
+        checkMembership(user, home);
 
         item.setBought(true);
         shoppingListItemRepository.save(item);
@@ -136,40 +102,78 @@ public class ShoppingListServiceImpl implements ShoppingListService {
                 .unit(item.getUnit())
                 .threshold(1)
                 .category(item.getCategory())
-                .home(home) // ✅ Correct home
+                .shoppingListItemId(item.getId())
+                .home(home)
                 .build();
-
         inventoryItemRepository.save(inventoryItem);
 
         return mapToResponse(item);
     }
 
+    @Override
+    @Transactional
+    public ShoppingListItemResponseDTO unmarkBought(Long id, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new HomerohaException("User not found"));
+        ShoppingListItem item = shoppingListItemRepository.findById(id)
+                .orElseThrow(() -> new HomerohaException("Item not found"));
+        Home home = item.getHome();
+        checkMembership(user, home);
+
+        item.setBought(false);
+        shoppingListItemRepository.save(item);
+
+        // Remove the linked inventory entry
+        inventoryItemRepository.deleteByShoppingListItemId(item.getId());
+
+        return mapToResponse(item);
+    }
 
     @Override
     public void deleteItem(Long id, String userEmail) {
-        // 1) Load the user
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new HomerohaException("User not found"));
-
-        // 2) Load the item (and its home) in one go
         ShoppingListItem item = shoppingListItemRepository.findById(id)
                 .orElseThrow(() -> new HomerohaException("Shopping item not found"));
-
         Home home = item.getHome();
-
-        // 3) Check that the user belongs to that home
-        if (!userHomeRepository.existsByUserAndHome(user, home)) {
-            // Throw a 403
-            throw new ResponseStatusException(
-                    HttpStatus.FORBIDDEN,
-                    "You are not a member of this home"
-            );
-        }
-
-        // 4) All good → delete
+        checkMembership(user, home);
         shoppingListItemRepository.delete(item);
     }
 
+    @Override
+    @Transactional
+    public ShoppingListItemResponseDTO updateItem(Long id, String userEmail, ShoppingListItemRequestDTO request) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new HomerohaException("User not found"));
+        ShoppingListItem item = shoppingListItemRepository.findById(id)
+                .orElseThrow(() -> new HomerohaException("Item not found"));
+        Home home = item.getHome();
+        checkMembership(user, home);
+
+        // Update fields
+        item.setName(request.getName());
+        item.setQuantity(request.getQuantity());
+        item.setUnit(request.getUnit());
+        item.setCategory(request.getCategory());
+
+        shoppingListItemRepository.save(item);
+        return mapToResponse(item);
+    }
+
+    // helpers
+    private void checkMembership(User user, Home home) {
+        if (!userHomeRepository.existsByUserAndHome(user, home)) {
+            throw new HomerohaException("You are not a member of this home");
+        }
+    }
+
+    private Home getActiveHomeOrThrow(User user) {
+        Home activeHome = user.getActiveHome();
+        if (activeHome == null) {
+            throw new HomerohaException("No active home selected");
+        }
+        return activeHome;
+    }
 
     private ShoppingListItemResponseDTO mapToResponse(ShoppingListItem item) {
         return ShoppingListItemResponseDTO.builder()

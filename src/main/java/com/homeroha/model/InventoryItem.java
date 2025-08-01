@@ -16,14 +16,14 @@ public class InventoryItem {
     private Long id;
 
     private String name;
-
     private Integer quantity;
-
-    private String unit; // e.g., kg, L, pcs
-
+    private String unit;       // e.g., kg, L, pcs
     private Integer threshold; // for low-stock alert
+    private String category;   // optional
 
-    private String category; // optional
+    // Link back to the ShoppingListItem that created this entry
+    @Column(name = "shopping_list_item_id")
+    private Long shoppingListItemId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "home_id", nullable = false)
