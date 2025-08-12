@@ -1,6 +1,6 @@
 package com.homeroha.service.impl;
 
-import com.homeroha.dto.*;
+// import com.homeroha.dto.*;
 import com.homeroha.model.User;
 import com.homeroha.repository.UserRepository;
 import com.homeroha.security.JwtTokenProvider;
@@ -11,16 +11,16 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+// import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+// import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+// import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 //import com.google.api.client.json.jackson2.JacksonFactory;
 import com.homeroha.dto.AuthRequest;
 import com.homeroha.dto.AuthResponse;
 import com.homeroha.dto.RegisterRequest;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.util.Collections;
+// import java.util.Collections;
 
 @Service
 @RequiredArgsConstructor

@@ -62,7 +62,7 @@ public class ShoppingListController {
             @RequestBody ShoppingListItemRequestDTO request,
             Principal principal
     ) {
-        ShoppingListItemResponseDTO updated = shoppingListService.updateItem(id, principal.getName(), request);
+        // ShoppingListItemResponseDTO updated = shoppingListService.updateItem(id, principal.getName(), request);
         return ResponseEntity.ok(Map.of("message", "Item updated successfully"));
 //        return ResponseEntity.ok(updated);
     }

@@ -1,19 +1,19 @@
 package com.homeroha.controller;
 
 import com.homeroha.dto.AuthResponse;
-import com.homeroha.dto.UserDashboardDTO;
-import com.homeroha.model.Home;
+// import com.homeroha.dto.UserDashboardDTO;
+// import com.homeroha.model.Home;
 import com.homeroha.model.User;
 import com.homeroha.repository.UserRepository;
-import com.homeroha.security.JwtTokenProvider;
-import com.homeroha.service.UserService;
+// import com.homeroha.security.JwtTokenProvider;
+// import com.homeroha.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
+// import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/user")
@@ -21,7 +21,7 @@ import java.security.Principal;
 public class UserController {
 
     private final UserRepository userRepository;
-    private final UserService userService;
+    // private final UserService userService;
 
     @GetMapping("/me")
     public ResponseEntity<AuthResponse> getCurrentUser() {

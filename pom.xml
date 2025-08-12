@@ -8,10 +8,10 @@
 		<version>3.4.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.homio</groupId>
-	<artifactId>homio</artifactId>
+	<groupId>com.homeroha</groupId>
+	<artifactId>homeroha</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>homio</name>
+	<name>homeroha</name>
 	<description>home management application</description>
 	<url/>
 	<licenses>
