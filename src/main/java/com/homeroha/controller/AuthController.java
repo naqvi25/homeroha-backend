@@ -37,7 +37,7 @@ public class AuthController {
 
     @PostMapping("/google")
     public ResponseEntity<?> googleLogin(@RequestBody Map<String,String> body) {
-        String idToken = body.get("idToken");
+        // String idToken = body.get("idToken");
         return ResponseEntity.status(HttpStatus.OK).body("OK");
     }
 }

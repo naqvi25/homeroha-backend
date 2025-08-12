@@ -1,7 +1,5 @@
 package com.homeroha.model;
 
-import com.homeroha.model.Home;
-import com.homeroha.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 

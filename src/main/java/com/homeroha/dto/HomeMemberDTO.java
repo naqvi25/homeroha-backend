@@ -1,6 +1,6 @@
 package com.homeroha.dto;
 
-import com.homeroha.dto.Role;
+// import com.homeroha.dto.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
